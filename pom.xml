@@ -16,22 +16,43 @@
 
 	<name/>
 	<description/>
-	<properties>
+    <modules>
+        <module>ai-generated-tweet-to-kafka-service</module>
+    </modules>
+    <properties>
 		<java.version>25</java.version>
         <maven-compiler-plugin-version>3.15.0</maven-compiler-plugin-version>
+        <lombok.version>1.18.46</lombok.version>
+        <httpclient5.version>5.6.4</httpclient5.version>
+        <spring-ai.version>2.0.0</spring-ai.version>
+        <jackson-pom.version>2.22</jackson-pom.version>
 	</properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter</artifactId>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
             </dependency>
-
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-test</artifactId>
-                <scope>test</scope>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5</artifactId>
+                <version>${httpclient5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson-pom.version}</version>
+                <scope>compile</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -46,6 +67,7 @@
                 <version>${maven-compiler-plugin-version}</version>
                 <configuration>
                     <release>${java.version}</release>
+                    <proc>full</proc>
                 </configuration>
             </plugin>
         </plugins>

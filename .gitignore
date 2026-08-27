@@ -15,6 +15,7 @@ target/
 
 ### IntelliJ IDEA ###
 .idea
+.DS_Store
 *.iws
 *.iml
 *.ipr
@@ -31,3 +32,6 @@ build/
 
 ### VS Code ###
 .vscode/
+*/logs/*
+logs/*
+/ai-generated-tweet-to-kafka-service/ai-generated-tweet-to-kafka-service/logs/*
