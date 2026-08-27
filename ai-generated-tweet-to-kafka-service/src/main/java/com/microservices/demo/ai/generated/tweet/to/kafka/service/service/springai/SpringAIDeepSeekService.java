@@ -1,9 +1,9 @@
 package com.microservices.demo.ai.generated.tweet.to.kafka.service.service.springai;
 
-import com.microservices.demo.ai.generated.tweet.to.kafka.service.config.AiGeneratedTweetToKafkaServiceConfigData;
 import com.microservices.demo.ai.generated.tweet.to.kafka.service.exception.AiGeneratedTweetToKafkaServiceException;
 import com.microservices.demo.ai.generated.tweet.to.kafka.service.service.AiService;
 import com.microservices.demo.ai.generated.tweet.to.kafka.service.service.springai.model.TweetResponse;
+import com.microservices.demo.config.AiGeneratedTweetToKafkaServiceConfigData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientResponse;

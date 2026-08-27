@@ -1,9 +1,10 @@
 package com.microservices.demo.ai.generated.tweet.to.kafka.service;
 
-import com.microservices.demo.ai.generated.tweet.to.kafka.service.config.AiGeneratedTweetToKafkaServiceConfigData;
 import com.microservices.demo.ai.generated.tweet.to.kafka.service.init.StreamInitializer;
 import com.microservices.demo.ai.generated.tweet.to.kafka.service.runner.AiStreamRunner;
+import com.microservices.demo.config.AiGeneratedTweetToKafkaServiceConfigData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,7 +14,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 
 
 @SpringBootApplication
@@ -28,7 +28,7 @@ public class AiGeneratedTweetsToKafkaServiceApplication implements CommandLineRu
     private final TaskScheduler taskScheduler;
 
 
-    public AiGeneratedTweetsToKafkaServiceApplication(AiGeneratedTweetToKafkaServiceConfigData aiGeneratedTweetToKafkaServiceConfigData, StreamInitializer streamInitializer, AiStreamRunner aiStreamRunner, TaskScheduler taskScheduler) {
+    public AiGeneratedTweetsToKafkaServiceApplication(AiGeneratedTweetToKafkaServiceConfigData aiGeneratedTweetToKafkaServiceConfigData, StreamInitializer streamInitializer, AiStreamRunner aiStreamRunner, @Qualifier("taskScheduler") TaskScheduler taskScheduler) {
         this.aiGeneratedTweetToKafkaServiceConfigData = aiGeneratedTweetToKafkaServiceConfigData;
         this.streamInitializer = streamInitializer;
         this.aiStreamRunner = aiStreamRunner;
