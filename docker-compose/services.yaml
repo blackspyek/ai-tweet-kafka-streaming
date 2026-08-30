@@ -1,6 +1,10 @@
 services:
   ai-generated-tweet-to-kafka-service:
     image: ai-generated-tweet-to-kafka-service:${SERVICE_VERSION:-latest}
+    depends_on:
+      config-server:
+        condition: service_started
+    restart: "on-failure:10"
     ports:
       - "5005:5005"
     volumes:
@@ -13,5 +17,21 @@ services:
       - "KAFKA_CONFIG_BOOTSTRAP_SERVERS=kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
       - "KAFKA_CONFIG_SCHEMA_REGISTRY_URL=http://schema-registry:8081"
       - "SPRING_AI_OLLAMA_BASE_URL=http://host.docker.internal:11434"
+      - "CONFIG_SERVER_URL=http://config-server:8888"
+      - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
+      - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+    networks:
+      - ${GLOBAL_NETWORK:-application}
+  config-server:
+    image: config-server:${SERVICE_VERSION:-latest}
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./docker-logs:/workspace/config-server/logs"
+      - "../config-server-repository:/config-server-repository"
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006 -Xms128m -Xmx256m"
+      - "ENCRYPT_KEY=${ENCRYPT_KEY}"
+      - "CONFIG_REPO_URI=file:/config-server-repository"
     networks:
       - ${GLOBAL_NETWORK:-application}
