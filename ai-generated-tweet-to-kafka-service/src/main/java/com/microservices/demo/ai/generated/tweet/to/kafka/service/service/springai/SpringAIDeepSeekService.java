@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,6 +24,21 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @Slf4j
 public class SpringAIDeepSeekService implements AiService {
+    private static final int SIMULATED_USER_COUNT = 100;
+    private static final List<String> SENTIMENT_DIRECTIONS = List.of(
+            "positive: show genuine satisfaction, enthusiasm, relief or optimism",
+            "negative: show believable frustration, disappointment, concern or criticism",
+            "neutral: share a matter-of-fact observation or question without strong emotion",
+            "mixed: combine appreciation with a reservation, doubt or minor frustration"
+    );
+    private static final List<String> WRITING_STYLES = List.of(
+            "concise and casual",
+            "reflective and personal",
+            "informal with light humor",
+            "direct and slightly sarcastic",
+            "practical and technical, without sounding like documentation"
+    );
+
     private final ChatClient chatClient;
     private final AiGeneratedTweetToKafkaServiceConfigData configData;
 
@@ -42,11 +58,11 @@ public class SpringAIDeepSeekService implements AiService {
         log.info("Converter format: {}", converter.getFormat());
 
         PromptTemplate promptTemplate = new PromptTemplate(tweetPrompt);
-        long tweetId = ThreadLocalRandom.current()
-                .nextLong(1, Long.MAX_VALUE);
-
-        long userId = ThreadLocalRandom.current()
-                .nextLong(1, Long.MAX_VALUE);
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        long tweetId = random.nextLong(1, Long.MAX_VALUE);
+        int userId = random.nextInt(1, SIMULATED_USER_COUNT + 1);
+        String writingStyle = WRITING_STYLES.get((userId - 1) % WRITING_STYLES.size());
+        String sentimentDirection = SENTIMENT_DIRECTIONS.get(random.nextInt(SENTIMENT_DIRECTIONS.size()));
 
         Prompt prompt = promptTemplate.create(Map.of(
                 "keywords",
@@ -60,6 +76,12 @@ public class SpringAIDeepSeekService implements AiService {
 
                 "userId",
                 userId,
+
+                "writingStyle",
+                writingStyle,
+
+                "sentimentDirection",
+                sentimentDirection,
 
                 "requestId",
                 UUID.randomUUID().toString(),

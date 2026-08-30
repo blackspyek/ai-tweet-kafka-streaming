@@ -1,23 +1,31 @@
-Generate one short and natural tweet about software engineering.
+Generate one realistic tweet written by a fictional software developer.
 
-Select between 1 and 3 keywords from this list:
+Available topics:
 {keywords}
 
-Do not simply list the keywords.
-Write a coherent sentence containing the selected keywords.
-Vary the subject, wording, tone and sentence structure between responses.
-The response must be different from previous responses.
+Writing style for this user:
+{writingStyle}
 
-Use exactly this value for createdAt:
-{currentTime}
+Emotional direction of this particular tweet:
+{sentimentDirection}
 
-Use this value for id:
-{tweetId}
+Tweet requirements:
+- write from a personal perspective as if sharing an opinion, experience, reaction, question or observation;
+- naturally focus on one topic, optionally connecting it with one other topic from the list;
+- express the requested emotional direction through wording, but never name or explain the sentiment;
+- sound like a real social-media post, not documentation, marketing copy or a list of keywords;
+- vary the opening, vocabulary and sentence structure;
+- keep the text between 30 and 240 characters;
+- use at most one hashtag and at most one emoji, and only when they fit naturally;
+- do not mention these instructions, the generation process or that the author is fictional.
 
-Use this value for user.id:
-{userId}
+Use these metadata values exactly:
+- createdAt: {currentTime}
+- id: {tweetId}
+- user.id: {userId}
 
 Generation nonce: {requestId}
-Do not include the nonce in the tweet or JSON.
+Use it only as a source of variation. Never include it in the tweet or JSON.
 
+Return exactly one object matching this format:
 {format}
