@@ -32,7 +32,15 @@
         <avro.version>1.12.1</avro.version>
         <spring-kafka.version>4.1.0</spring-kafka.version>
         <project.version>0.0.1-SNAPSHOT</project.version>
+        <kafka-avro-serializer.version>8.3.1</kafka-avro-serializer.version>
 	</properties>
+
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
     <dependencyManagement>
         <dependencies>
@@ -47,10 +55,46 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.microservices.demo</groupId>
+                <artifactId>kafka-admin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microservices.demo</groupId>
+                <artifactId>kafka-producer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.microservices.demo</groupId>
+                <artifactId>kafka-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Source: https://mvnrepository.com/artifact/io.confluent/kafka-avro-serializer -->
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${kafka-avro-serializer.version}</version>
+                <scope>compile</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.swagger.core.v3</groupId>
+                        <artifactId>swagger-annotations-jakarta</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents.client5</groupId>
@@ -77,6 +121,7 @@
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
                 <scope>compile</scope>
+
             </dependency>
             <!-- Source: https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka -->
             <dependency>

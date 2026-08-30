@@ -11,6 +11,8 @@ import org.apache.kafka.clients.admin.TopicListing;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -39,14 +41,14 @@ public class KafkaAdminClient {
     public void createTopics(){
         AtomicInteger attempt = new AtomicInteger();
         try{
-            CreateTopicsResult result = retryTemplate.execute(
+            retryTemplate.execute(
                     () -> doCreateTopics(attempt.incrementAndGet())
             );
         } catch (Exception e){
             throw new KafkaClientException("Reached max number of retry for creating kafka topic(s)");
         }
     }
-    private void checkTopicsCreated() {
+    public void checkTopicsCreated() {
         Collection<TopicListing> topics = getTopics();
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
@@ -72,14 +74,17 @@ public class KafkaAdminClient {
             sleepTimeMs *= multiplier;
         }
     }
-    private HttpStatus getSchemaRegistryStatus(){
+    private HttpStatusCode getSchemaRegistryStatus(){
         try {
-            return webClient
+            ResponseEntity<Void> response = webClient
                     .method(HttpMethod.GET)
                     .uri(kafkaConfigData.getSchemaRegistryUrl())
                     .retrieve()
-                    .bodyToMono(HttpStatus.class)
+                    .toBodilessEntity()
                     .block();
+            return response != null
+                    ? response.getStatusCode()
+                    : HttpStatus.SERVICE_UNAVAILABLE;
         } catch (Exception e) {
             return HttpStatus.SERVICE_UNAVAILABLE;
         }

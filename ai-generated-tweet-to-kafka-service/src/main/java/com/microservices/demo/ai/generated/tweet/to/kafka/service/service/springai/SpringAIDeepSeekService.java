@@ -14,7 +14,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Slf4j
@@ -33,14 +37,33 @@ public class SpringAIDeepSeekService implements AiService {
     public static final String DEEP_SEEK_THINK_REGEX = "(?s)<think>.*?</think>";
 
     @Override
-    public String generateTweet() throws AiGeneratedTweetToKafkaServiceException {
+    public TweetResponse generateTweet() throws AiGeneratedTweetToKafkaServiceException {
         BeanOutputConverter<TweetResponse> converter = new BeanOutputConverter<>(TweetResponse.class);
         log.info("Converter format: {}", converter.getFormat());
 
         PromptTemplate promptTemplate = new PromptTemplate(tweetPrompt);
+        long tweetId = ThreadLocalRandom.current()
+                .nextLong(1, Long.MAX_VALUE);
+
+        long userId = ThreadLocalRandom.current()
+                .nextLong(1, Long.MAX_VALUE);
+
         Prompt prompt = promptTemplate.create(Map.of(
-                configData.getKeywordsPlaceholder().replace("{", "").replace("}", ""),
-                String.join(",", configData.getStreamingDataKeywords()),
+                "keywords",
+                String.join(", ", configData.getStreamingDataKeywords()),
+
+                "currentTime",
+                ZonedDateTime.now(ZoneOffset.UTC).toString(),
+
+                "tweetId",
+                tweetId,
+
+                "userId",
+                userId,
+
+                "requestId",
+                UUID.randomUUID().toString(),
+
                 "format",
                 converter.getFormat()
         ));
@@ -49,11 +72,19 @@ public class SpringAIDeepSeekService implements AiService {
                 .call()
                 .chatClientResponse();
 
-        String modelResult = chatClientRespones.chatResponse().getResult().getOutput().getText();
-
-
+        String modelResult = chatClientRespones.chatResponse().getResult().getOutput().getText().replaceAll(DEEP_SEEK_THINK_REGEX, "").trim();
         log.info("Model result from deepseek: {} with model: {}", modelResult,
                 chatClientRespones.chatResponse().getMetadata().getModel());
-        return modelResult.replaceAll(DEEP_SEEK_THINK_REGEX, "");
+        try {
+            return converter.convert(modelResult);
+        } catch (Exception exception) {
+            throw new AiGeneratedTweetToKafkaServiceException(
+                    "Could not convert model response to TweetResponse",
+                    exception
+            );
+        }
+
+
+
     }
 }

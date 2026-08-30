@@ -1,0 +1,17 @@
+services:
+  ai-generated-tweet-to-kafka-service:
+    image: ai-generated-tweet-to-kafka-service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5005:5005"
+    volumes:
+      - "./docker-logs:/workspace/ai-generated-tweet-to-kafka-service/logs"
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Xms128m -Xmx256m"
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=info"
+      - "LOGGING_LEVEL_ROOT=info"
+      - "KAFKA_CONFIG_TOPIC_NAME=twitter-topic"
+      - "KAFKA_CONFIG_BOOTSTRAP_SERVERS=kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
+      - "KAFKA_CONFIG_SCHEMA_REGISTRY_URL=http://schema-registry:8081"
+      - "SPRING_AI_OLLAMA_BASE_URL=http://host.docker.internal:11434"
+    networks:
+      - ${GLOBAL_NETWORK:-application}
