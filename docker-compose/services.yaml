@@ -26,6 +26,7 @@ services:
     image: config-server:${SERVICE_VERSION:-latest}
     ports:
       - "8888:8888"
+      - "5006:5006"
     volumes:
       - "./docker-logs:/workspace/config-server/logs"
       - "../config-server-repository:/config-server-repository"

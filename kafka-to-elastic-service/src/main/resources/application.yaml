@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: kafka_to_elastic
+  config:
+    import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  cloud:
+    config:
+      username: spring_cloud_user
+      password: test

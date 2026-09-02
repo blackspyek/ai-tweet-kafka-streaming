@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: config-server
+
+  profiles:
+    active: native
   security:
     user:
       name: spring_cloud_user
@@ -11,9 +14,8 @@ spring:
   cloud:
     config:
       server:
-        git:
-          uri: ${CONFIG_REPO_URI:file:./config-server-repository}
-          clone-on-start: true
+        native:
+          search-locations: ${CONFIG_REPO_URI:file:./config-server-repository}
 
 logging:
   level:
