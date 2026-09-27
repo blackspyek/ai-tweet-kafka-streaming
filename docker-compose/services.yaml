@@ -2,8 +2,10 @@ services:
   ai-generated-tweet-to-kafka-service:
     image: ai-generated-tweet-to-kafka-service:${SERVICE_VERSION:-latest}
     depends_on:
-      config-server:
-        condition: service_started
+      - config-server
+      - kafka-broker-1
+      - kafka-broker-2
+      - kafka-broker-3
     restart: "on-failure:10"
     ports:
       - "5005:5005"
@@ -22,11 +24,58 @@ services:
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
     networks:
       - ${GLOBAL_NETWORK:-application}
+  kafka-to-elastic-service:
+    image: kafka-to-elastic-service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5006:5006"
+    volumes:
+      - "./docker-logs:/workspace/kafka-to-elastic-service/logs"
+    user: root
+    restart: "on-failure:10"
+    depends_on:
+      config-server:
+        condition: service_started
+
+      ai-generated-tweet-to-kafka-service:
+        condition: service_started
+
+      kafka-broker-1:
+        condition: service_started
+
+      kafka-broker-2:
+        condition: service_started
+
+      kafka-broker-3:
+        condition: service_started
+
+      elastic-1:
+        condition: service_started
+
+      elastic-2:
+        condition: service_started
+
+      elastic-3:
+        condition: service_started
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006 -Xms128m -Xmx256m"
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=debug"
+      - "LOGGING_LEVEL_ROOT=debug"
+      - "KAFKA_CONFIG_TOPIC_NAME=twitter-topic"
+      - "KAFKA_CONFIG_BOOTSTRAP_SERVERS=kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
+      - "KAFKA_CONFIG_SCHEMA_REGISTRY_URL=http://schema-registry:8081"
+      - "CONFIG_SERVER_URL=http://config-server:8888"
+      - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
+      - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "ELASTIC_CONFIG_INDEX_NAME=twitter-index"
+      - "ELASTIC_CONFIG_CONNECTION_URL=elastic-1:9200"
+      - "ENCRYPT_KEY=${ENCRYPT_KEY}"
+    networks:
+      - ${GLOBAL_NETWORK:-services}
   config-server:
     image: config-server:${SERVICE_VERSION:-latest}
     ports:
       - "8888:8888"
-      - "5006:5006"
+      - "5007:5007"
     volumes:
       - "./docker-logs:/workspace/config-server/logs"
       - "../config-server-repository:/config-server-repository"
