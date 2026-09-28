@@ -45,6 +45,7 @@
         <kafka-avro-serializer.version>8.3.1</kafka-avro-serializer.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
         <elastic-search.version>9.5.0</elastic-search.version>
+        <spring-openapi.version>3.1.1</spring-openapi.version>
 	</properties>
 
     <repositories>
@@ -80,6 +81,11 @@
                 <groupId>com.microservices.demo</groupId>
                 <artifactId>elastic-query-client</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${spring-openapi.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.microservices.demo</groupId>

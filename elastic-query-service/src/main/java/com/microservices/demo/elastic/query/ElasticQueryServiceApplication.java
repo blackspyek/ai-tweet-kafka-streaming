@@ -1,4 +1,4 @@
-package com.microservices.demo.elastic.query.service;
+package com.microservices.demo.elastic.query;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

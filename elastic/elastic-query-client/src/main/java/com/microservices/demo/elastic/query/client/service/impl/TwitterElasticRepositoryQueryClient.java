@@ -5,12 +5,14 @@ import com.microservices.demo.elastic.model.index.impl.TwitterIndexModel;
 import com.microservices.demo.elastic.query.client.exception.ElasticQueryClientException;
 import com.microservices.demo.elastic.query.client.repository.TwitterElasticsearchQueryRepository;
 import com.microservices.demo.elastic.query.client.service.ElasticQueryClient;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Primary
 public class TwitterElasticRepositoryQueryClient implements ElasticQueryClient<TwitterIndexModel> {
     private final TwitterElasticsearchQueryRepository twitterElasticsearchQueryRepository;
 
