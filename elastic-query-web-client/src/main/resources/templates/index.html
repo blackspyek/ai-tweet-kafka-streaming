@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{header :: head}"></head>
+
+<body id="query-client"
+      class="min-h-screen bg-slate-950 text-slate-100">
+
+<div th:replace="~{header :: header}"></div>
+
+<main class="mx-auto flex min-h-[70vh] max-w-5xl items-center px-6 py-12">
+
+    <div class="w-full">
+
+        <div sec:authorize="isAnonymous()"
+             class="rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
+
+            <h1 class="mb-3 text-3xl font-bold text-white">
+                Welcome to Query Client
+            </h1>
+
+            <p class="text-slate-400">
+                Please
+                <a th:href="@{/home}"
+                   class="font-semibold text-blue-400 hover:text-blue-300">
+                    login
+                </a>
+                to start searching.
+            </p>
+
+        </div>
+
+        <div sec:authorize="isAuthenticated()"
+             class="rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
+
+            <h1 class="mb-3 text-3xl font-bold text-white">
+                Hello,
+                <span sec:authentication="name"
+                      class="text-blue-400"></span>
+            </h1>
+
+            <p class="text-slate-400">
+                Ready to search?
+                <a th:href="@{/home}"
+                   class="font-semibold text-blue-400 hover:text-blue-300">
+                    Let's get started
+                </a>
+            </p>
+
+        </div>
+
+    </div>
+
+</main>
+
+<div th:replace="~{footer :: footer}"></div>
+
+</body>
+</html>

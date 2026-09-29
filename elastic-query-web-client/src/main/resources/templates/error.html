@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{header :: head}"></head>
+
+<body id="query-client"
+      class="min-h-screen bg-slate-950 text-slate-100">
+
+<div th:replace="~{header :: header}"></div>
+
+<main class="mx-auto flex min-h-[70vh] max-w-3xl items-center px-6 py-12">
+    <div class="w-full rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
+
+        <h1 class="mb-2 text-3xl font-bold text-white">
+            Query Client
+        </h1>
+
+        <h2 class="mb-6 text-xl font-semibold text-red-400">
+            An error occurred
+        </h2>
+
+        <div class="mb-8 rounded-xl border border-red-900/50 bg-red-950/30 p-4">
+            <ul class="space-y-2 text-sm text-red-200">
+                <li th:text="'Error: ' + ${error}">
+                    Error
+                </li>
+
+                <li th:text="${error_description}">
+                    Error description
+                </li>
+            </ul>
+        </div>
+
+        <a th:href="@{/}"
+           class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2
+                  text-sm font-semibold text-white transition
+                  hover:bg-blue-500
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500
+                  focus:ring-offset-2
+                  focus:ring-offset-slate-900">
+            Main page
+        </a>
+
+    </div>
+</main>
+
+<div th:replace="~{footer :: footer}"></div>
+
+</body>
+</html>

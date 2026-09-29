@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{header :: head}"></head>
+
+<body id="query-client"
+      class="min-h-screen bg-slate-950 text-slate-100">
+
+<div th:replace="~{header :: header}"></div>
+
+<main class="mx-auto min-h-[70vh] max-w-6xl px-6 py-12">
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            Query Client
+        </h1>
+
+        <p class="mt-2 text-slate-400">
+            Search tweets stored in Elasticsearch.
+        </p>
+    </div>
+
+    <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+
+        <form th:action="@{/query-by-text}"
+              th:object="${elasticQueryWebClientRequestModel}"
+              method="post">
+
+            <div class="flex flex-col gap-4 sm:flex-row">
+
+                <div class="flex-1">
+
+                    <input
+                            type="text"
+                            th:field="*{text}"
+                            id="text"
+                            placeholder="Enter text to search"
+                            class="w-full rounded-lg border border-slate-700
+                                   bg-slate-950 px-4 py-3
+                                   text-slate-100
+                                   placeholder:text-slate-500
+                                   outline-none transition
+                                   focus:border-blue-500
+                                   focus:ring-2
+                                   focus:ring-blue-500/30">
+
+                    <p th:if="${#fields.hasErrors('text')}"
+                       th:errors="*{text}"
+                       class="mt-2 text-sm text-red-400">
+                        Validation error
+                    </p>
+
+                </div>
+
+                <button
+                        type="submit"
+                        class="rounded-lg bg-blue-600 px-6 py-3
+                               font-semibold text-white
+                               transition hover:bg-blue-500
+                               focus:outline-none
+                               focus:ring-2
+                               focus:ring-blue-500
+                               focus:ring-offset-2
+                               focus:ring-offset-slate-900">
+                    Search
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <div class="mt-8"
+         th:switch="${elasticQueryWebClientResponseModels}">
+
+        <!-- No results -->
+        <div th:case="null"
+             class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+
+            <p th:text="${error != null} ? ${error} : 'No results yet!'"
+               class="text-slate-400">
+                No results yet!
+            </p>
+
+        </div>
+
+
+        <!-- Results -->
+        <div th:case="*">
+
+            <h2 class="mb-4 text-xl font-semibold text-white">
+                Search results for
+                <span th:text="${searchText}"
+                      class="text-blue-400">
+                    query
+                </span>
+            </h2>
+
+            <div class="overflow-hidden rounded-xl border border-slate-800">
+
+                <div class="overflow-x-auto">
+
+                    <table class="min-w-full divide-y divide-slate-800">
+
+                        <thead class="bg-slate-900">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                ID
+                            </th>
+
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                User ID
+                            </th>
+
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Text
+                            </th>
+
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Date
+                            </th>
+                        </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-800 bg-slate-950">
+
+                        <tr th:each="elasticQueryClientResponseModel : ${elasticQueryWebClientResponseModels}"
+                            class="transition hover:bg-slate-900">
+
+                            <td th:text="${elasticQueryClientResponseModel.id}"
+                                class="whitespace-nowrap px-6 py-4 text-sm text-slate-300">
+                            </td>
+
+                            <td th:text="${elasticQueryClientResponseModel.userId}"
+                                class="whitespace-nowrap px-6 py-4 text-sm text-slate-300">
+                            </td>
+
+                            <td th:text="${elasticQueryClientResponseModel.text}"
+                                class="max-w-xl px-6 py-4 text-sm text-slate-200">
+                            </td>
+
+                            <td th:text="${elasticQueryClientResponseModel.createdAt}"
+                                class="whitespace-nowrap px-6 py-4 text-sm text-slate-400">
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<div th:replace="~{footer :: footer}"></div>
+
+</body>
+</html>

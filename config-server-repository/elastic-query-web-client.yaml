@@ -1,0 +1,15 @@
+server:
+  port: 8184
+  servlet:
+    context-path: /elastic-query-web-client
+elastic-query-web-client:
+  webclient:
+    max-in-memory-size: 10485760
+    base-url: 'http://elastic-query-service/elastic-query-service/documents'
+spring:
+  thymeleaf:
+    cache: false
+user-config:
+  username: test
+  password: test
+  roles: USER
