@@ -6,9 +6,35 @@ elastic-query-web-client:
   webclient:
     max-in-memory-size: 10485760
     base-url: 'http://elastic-query-service/elastic-query-service/documents'
+    service-id: elastic-query-service
+    instances:
+      -
+        id: elastic-query-service-1
+        host: localhost
+        port: 8103
+
+
+  query-by-text:
+    method: POST
+    uri: "/get-document-by-text"
 spring:
   thymeleaf:
     cache: false
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: 'elastic-query-web-client'
+            client-secret: 'vwNQP9UhTmt8gmmhUZp9Y5tyatuyC9vHEptYVuLfdFB0dnQxldoNN5vhcSFeFNlwQiwUybDPNnx8PcUqNZB756'
+            authorization-grant-type: authorization_code
+            redirect-uri: '{baseUrl}/login/oauth2/code/{registrationId}'
+            scope: openid
+        provider:
+          keycloak:
+            issuerUri: http://localhost:8081/realms/microservices-realm
+security:
+  logout-success-url: http://localhost:8184/elastic-query-web-client
 user-config:
   username: test
   password: test

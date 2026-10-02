@@ -39,6 +39,7 @@
         <lombok.version>1.18.46</lombok.version>
         <httpclient5.version>5.6.4</httpclient5.version>
         <spring-ai.version>2.0.0</spring-ai.version>
+        <postgresql.version>42.7.13</postgresql.version>
         <jackson-pom.version>2.22</jackson-pom.version>
         <avro.version>1.12.1</avro.version>
         <spring-kafka.version>4.1.0</spring-kafka.version>
@@ -105,6 +106,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Source: https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
             <dependency>
                 <groupId>com.microservices.demo</groupId>
                 <artifactId>kafka-admin</artifactId>

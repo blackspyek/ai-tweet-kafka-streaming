@@ -37,7 +37,7 @@
 
             <h1 class="mb-3 text-3xl font-bold text-white">
                 Hello,
-                <span sec:authentication="name"
+                <span th:text="${#authentication.principal.fullName}"
                       class="text-blue-400"></span>
             </h1>
 

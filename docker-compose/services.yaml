@@ -86,7 +86,7 @@ services:
     networks:
       - ${GLOBAL_NETWORK:-application}
 
-  elastic-query-service:
+  elastic-query-service-1:
     image: elastic.query.service:${SERVICE_VERSION:-latest}
     ports:
       - "5008:5008"
@@ -101,8 +101,8 @@ services:
       - elastic-3
     environment:
       - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008 -Xms128m -Xmx256m"
-      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=info"
-      - "LOGGING_LEVEL_ROOT=info"
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=debug"
+      - "LOGGING_LEVEL_ROOT=debug"
       - "ELASTIC_CONFIG_INDEX_NAME=twitter-index"
       - "ELASTIC_CONFIG_CONNECTION_URL=elastic-1:9200"
       - "SERVER_PORT=8183"
@@ -112,5 +112,79 @@ services:
       - "CONFIG_SERVER_URL=http://config-server:8888"
       - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true"
+      - "SPRING_DATASOURCE_USERNAME=keycloak"
+      - "SPRING_DATASOURCE_PASSWORD=keycloak"
+      - "SPRING_SQL_INIT_MODE=never"
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
+    networks:
+      - ${GLOBAL_NETWORK:-services}
+  elastic-query-service-2:
+    image: elastic.query.service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5009:5009"
+      - "8186:8186"
+    restart: "on-failure:10"
+    volumes:
+      - "./docker-logs:/workspace/elastic-query-service/logs"
+    depends_on:
+      - kafka-to-elastic-service
+      - elastic-1
+      - elastic-2
+      - elastic-3
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5009 -Xms128m -Xmx256m"
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=debug"
+      - "LOGGING_LEVEL_ROOT=debug"
+      - "ELASTIC_CONFIG_INDEX_NAME=twitter-index"
+      - "ELASTIC_CONFIG_CONNECTION_URL=elastic-1:9200"
+      - "SERVER_PORT=8186"
+      - "SERVER_SERVLET_CONTEXT_PATH=/elastic-query-service"
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server:8888"
+      - "ENCRYPT_KEY=${ENCRYPT_KEY}"
+      - "CONFIG_SERVER_URL=http://config-server:8888"
+      - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
+      - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true"
+      - "SPRING_DATASOURCE_USERNAME=keycloak"
+      - "SPRING_DATASOURCE_PASSWORD=keycloak"
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
+    networks:
+      - ${GLOBAL_NETWORK:-services}
+  elastic-query-web-client:
+    image: elastic-query-web-client:${SERVICE_VERSION:-latest}
+    ports:
+      - "5010:5010"
+      - "8184:8184"
+    volumes:
+      - "./docker-logs:/workspace/elastic-query-web-client/logs"
+      - "./check-config-server-started.sh:/usr/local/bin/check-config-server-started.sh"
+    user: root
+    restart: "on-failure:10"
+    depends_on:
+      - config-server
+      - keycloak-authorization-server
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5010 -Xms128m -Xmx256m"
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=info"
+      - "LOGGING_LEVEL_ROOT=info"
+      - "SERVER_PORT=8184"
+      - "SERVER_SERVLET_CONTEXT_PATH=/elastic-query-web-client"
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server:8888"
+      - "CONFIG_SERVER_URL=http://config-server:8888"
+      - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
+      - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_BASE_URL=http://elastic-query-service/elastic-query-service/documents"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_0_ID=elastic-query-service-1"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_0_HOST=elastic-query-service-1"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_0_PORT=8183"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_1_ID=elastic-query-service-2"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_1_HOST=elastic-query-service-2"
+      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_1_PORT=8186"
+      - "ENCRYPT_KEY=${ENCRYPT_KEY}"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SECURITY_LOGOUT_SUCCESS_URL=http://elastic-query-web-client:8184/elastic-query-web-client"
     networks:
       - ${GLOBAL_NETWORK:-services}

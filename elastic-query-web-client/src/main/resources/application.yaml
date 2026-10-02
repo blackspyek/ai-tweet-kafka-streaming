@@ -7,3 +7,7 @@ spring:
     config:
       username: spring_cloud_user
       password: test
+logging:
+  level:
+    root: DEBUG
+

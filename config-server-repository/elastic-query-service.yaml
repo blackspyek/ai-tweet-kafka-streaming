@@ -1,10 +1,37 @@
 elastic-query-service:
   version: v1
+  custom-audience: elastic-query-service
 server:
   port: 8103
   servlet:
     context-path: /elastic-query-service
+spring:
 
+  jpa:
+    open-in-view: false
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=public
+    username: keycloak
+    password: keycloak
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: always
+      platform: postgres
+      schema-locations: classpath:init-schema.sql
+      data-locations: classpath:init-data.sql
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/microservices-realm
+          jwk-set-uri: http://localhost:8081/realms/microservices-realm/protocol/openid-connect/certs
 elastic-query-config:
   text-field: text
 
