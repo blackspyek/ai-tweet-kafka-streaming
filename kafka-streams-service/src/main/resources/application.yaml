@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: kafka-streams-service
+  config:
+    import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  cloud:
+    config:
+      username: spring_cloud_user
+      password: test
+logging:
+  level:
+    root: DEBUG
+
