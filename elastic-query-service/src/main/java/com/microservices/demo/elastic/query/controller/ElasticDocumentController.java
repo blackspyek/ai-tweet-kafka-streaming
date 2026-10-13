@@ -1,7 +1,9 @@
 package com.microservices.demo.elastic.query.controller;
 
+import com.microservices.demo.elastic.query.model.ElasticQueryServiceAnalyticsResponseModel;
 import com.microservices.demo.elastic.query.model.ElasticQueryServiceRequestModel;
 import com.microservices.demo.elastic.query.model.ElasticQueryServiceResponseModel;
+import com.microservices.demo.elastic.query.security.TwitterQueryUser;
 import com.microservices.demo.elastic.query.service.ElasticQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -64,7 +69,7 @@ public class ElasticDocumentController {
     @Operation(summary = "Get elastic document by text!")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success", content = {
-                    @Content(schema = @Schema(implementation = ElasticQueryServiceResponseModel.class))
+                    @Content(schema = @Schema(implementation = ElasticQueryServiceAnalyticsResponseModel.class))
             }),
             @ApiResponse(responseCode = "400", description = "Not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error!")
@@ -73,8 +78,11 @@ public class ElasticDocumentController {
     @PreAuthorize("hasRole('APP_USER_ROLE') || hasRole('APP_SUPER_USER_ROLE') ||hasAuthority('SCOPE_APP_USER_ROLE')")
     @PostAuthorize("hasPermission(returnObject, 'READ')")
     @PostMapping("/get-document-by-text")
-    public ResponseEntity<List<ElasticQueryServiceResponseModel>> getDocumentByText(@RequestBody @Valid ElasticQueryServiceRequestModel elasticQueryServiceRequestModel){
-        log.debug("Elasticsearch  returned {} of documents on port {}", "XD", port);
-        return ResponseEntity.ok().body(elasticQueryService.getDocumentsByText(elasticQueryServiceRequestModel.getText()));
+    public ResponseEntity<ElasticQueryServiceAnalyticsResponseModel> getDocumentByText(@RequestBody @Valid ElasticQueryServiceRequestModel elasticQueryServiceRequestModel, @AuthenticationPrincipal TwitterQueryUser principal, @RegisteredOAuth2AuthorizedClient("keycloak") OAuth2AuthorizedClient oAuth2AuthorizedClient){
+        log.info("User {} querying documents for text {}", principal.getUsername(), elasticQueryServiceRequestModel.getText());
+
+        ElasticQueryServiceAnalyticsResponseModel response = elasticQueryService.getDocumentsByText(elasticQueryServiceRequestModel.getText(), oAuth2AuthorizedClient.getAccessToken().getTokenValue());
+        log.debug("Elasticsearch  returned {} of documents on port {}", response.getQueryResponseModels().size(), port);
+        return ResponseEntity.ok().body(response);
     }
 }

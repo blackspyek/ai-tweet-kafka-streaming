@@ -16,6 +16,8 @@ services:
       - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=info"
       - "LOGGING_LEVEL_ROOT=info"
       - "KAFKA_CONFIG_TOPIC_NAME=twitter-topic"
+      - "KAFKA_CONFIG_TOPIC_NAMES_TO_CREATE_0=twitter-topic"
+      - "KAFKA_CONFIG_TOPIC_NAMES_TO_CREATE_1=twitter-analytics-topic"
       - "KAFKA_CONFIG_BOOTSTRAP_SERVERS=kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
       - "KAFKA_CONFIG_SCHEMA_REGISTRY_URL=http://schema-registry:8081"
       - "SPRING_AI_OLLAMA_BASE_URL=http://host.docker.internal:11434"
@@ -118,6 +120,10 @@ services:
       - "SPRING_SQL_INIT_MODE=never"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/token"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service:8187/kafka-streams-service/get-word-count-by-word/{word}"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET=${ELASTIC_QUERY_SERVICE_CLIENT_SECRET}"
     networks:
       - ${GLOBAL_NETWORK:-services}
   elastic-query-service-2:
@@ -151,6 +157,10 @@ services:
       - "SPRING_DATASOURCE_PASSWORD=keycloak"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/token"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service:8187/kafka-streams-service/get-word-count-by-word/{word}"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET=${ELASTIC_QUERY_SERVICE_CLIENT_SECRET}"
     networks:
       - ${GLOBAL_NETWORK:-services}
   elastic-query-web-client:
@@ -186,5 +196,51 @@ services:
       - "ENCRYPT_KEY=${ENCRYPT_KEY}"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SECURITY_LOGOUT_SUCCESS_URL=http://elastic-query-web-client:8184/elastic-query-web-client"
+    networks:
+      - ${GLOBAL_NETWORK:-services}
+  kafka-streams-service:
+    image: kafka-streams-service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5012:5012"
+      - "8187:8187"
+
+    volumes:
+      - "./docker-logs:/workspace/kafka-streams-service/logs"
+      - "./check-config-server-started.sh:/usr/local/bin/check-config-server-started.sh"
+      - "./check-keycloak-server-started.sh:/usr/local/bin/check-keycloak-server-started.sh"
+
+    user: root
+    restart: "on-failure:10"
+
+    depends_on:
+      - config-server
+      - keycloak-authorization-server
+      - kafka-broker-1
+      - kafka-broker-2
+      - kafka-broker-3
+      - schema-registry
+
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5012 -Xms128m -Xmx256m"
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=debug"
+      - "LOGGING_LEVEL_ROOT=info"
+
+      - "CONFIG_SERVER_URL=http://config-server:8888"
+      - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
+      - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+
+      - "SERVER_PORT=8187"
+      - "SERVER_SERVLET_CONTEXT_PATH=/kafka-streams-service"
+
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server:8888"
+
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
+
+      - "KAFKA_CONFIG_BOOTSTRAP_SERVERS=kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
+      - "KAFKA_CONFIG_SCHEMA_REGISTRY_URL=http://schema-registry:8081"
+
+      - "ENCRYPT_KEY=${ENCRYPT_KEY}"
+
     networks:
       - ${GLOBAL_NETWORK:-services}

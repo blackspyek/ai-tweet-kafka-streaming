@@ -9,5 +9,5 @@ spring:
       password: test
 logging:
   level:
-    root: DEBUG
+    root: INFO
 
