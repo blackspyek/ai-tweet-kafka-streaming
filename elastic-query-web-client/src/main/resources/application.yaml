@@ -1,13 +1,26 @@
 spring:
   application:
     name: elastic-query-web-client
+
   config:
     import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+
   cloud:
     config:
       username: spring_cloud_user
       password: test
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVICE_URL:http://localhost:8761/eureka/}
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
 logging:
   level:
     root: DEBUG
-

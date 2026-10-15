@@ -6,14 +6,6 @@ elastic-query-web-client:
   webclient:
     max-in-memory-size: 10485760
     base-url: 'http://elastic-query-service/elastic-query-service/documents'
-    service-id: elastic-query-service
-    instances:
-      -
-        id: elastic-query-service-1
-        host: localhost
-        port: 8103
-
-
   query-by-text:
     method: POST
     uri: "/get-document-by-text"

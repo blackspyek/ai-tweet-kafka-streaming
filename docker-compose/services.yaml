@@ -88,6 +88,30 @@ services:
     networks:
       - ${GLOBAL_NETWORK:-application}
 
+  discovery-service-1:
+    image: discovery-service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5014:5014"
+      - "8761:8761"
+    restart: "on-failure:10"
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5014 -Xms128m -Xmx256m"
+      - "SPRING_PROFILES_ACTIVE=peer1"
+    networks:
+      - ${GLOBAL_NETWORK:-application}
+
+  discovery-service-2:
+    image: discovery-service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5015:5015"
+      - "8762:8762"
+    restart: "on-failure:10"
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5015 -Xms128m -Xmx256m"
+      - "SPRING_PROFILES_ACTIVE=peer2"
+    networks:
+      - ${GLOBAL_NETWORK:-application}
+
   elastic-query-service-1:
     image: elastic.query.service:${SERVICE_VERSION:-latest}
     ports:
@@ -97,6 +121,8 @@ services:
     volumes:
       - "./docker-logs:/workspace/elastic-query-service/logs"
     depends_on:
+      - discovery-service-1
+      - discovery-service-2
       - kafka-to-elastic-service
       - elastic-1
       - elastic-2
@@ -114,6 +140,7 @@ services:
       - "CONFIG_SERVER_URL=http://config-server:8888"
       - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "EUREKA_SERVICE_URL=http://discovery-service-1:8761/eureka/,http://discovery-service-2:8762/eureka/"
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true"
       - "SPRING_DATASOURCE_USERNAME=keycloak"
       - "SPRING_DATASOURCE_PASSWORD=keycloak"
@@ -121,8 +148,8 @@ services:
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/token"
-      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service:8187/kafka-streams-service/get-word-count-by-word/{word}"
-      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_ANALYTICS_DATABASE_URI=http://analytics-service:8188/analytics-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service/kafka-streams-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_ANALYTICS_DATABASE_URI=http://analytics-service/analytics-service/get-word-count-by-word/{word}"
       - "ELASTIC_QUERY_SERVICE_WEBCLIENT_QUERY_TYPE=ANALYTICS_DATABASE"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET=${ELASTIC_QUERY_SERVICE_CLIENT_SECRET}"
@@ -137,6 +164,8 @@ services:
     volumes:
       - "./docker-logs:/workspace/elastic-query-service/logs"
     depends_on:
+      - discovery-service-1
+      - discovery-service-2
       - kafka-to-elastic-service
       - elastic-1
       - elastic-2
@@ -154,14 +183,15 @@ services:
       - "CONFIG_SERVER_URL=http://config-server:8888"
       - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "EUREKA_SERVICE_URL=http://discovery-service-1:8761/eureka/,http://discovery-service-2:8762/eureka/"
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true"
       - "SPRING_DATASOURCE_USERNAME=keycloak"
       - "SPRING_DATASOURCE_PASSWORD=keycloak"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/token"
-      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service:8187/kafka-streams-service/get-word-count-by-word/{word}"
-      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_ANALYTICS_DATABASE_URI=http://analytics-service:8188/analytics-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service/kafka-streams-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_ANALYTICS_DATABASE_URI=http://analytics-service/analytics-service/get-word-count-by-word/{word}"
       - "ELASTIC_QUERY_SERVICE_WEBCLIENT_QUERY_TYPE=ANALYTICS_DATABASE"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET=${ELASTIC_QUERY_SERVICE_CLIENT_SECRET}"
@@ -180,6 +210,8 @@ services:
     depends_on:
       - config-server
       - keycloak-authorization-server
+      - discovery-service-1
+      - discovery-service-2
     environment:
       - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5010 -Xms128m -Xmx256m"
       - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=info"
@@ -190,13 +222,8 @@ services:
       - "CONFIG_SERVER_URL=http://config-server:8888"
       - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "EUREKA_SERVICE_URL=http://discovery-service-1:8761/eureka/,http://discovery-service-2:8762/eureka/"
       - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_BASE_URL=http://elastic-query-service/elastic-query-service/documents"
-      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_0_ID=elastic-query-service-1"
-      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_0_HOST=elastic-query-service-1"
-      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_0_PORT=8183"
-      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_1_ID=elastic-query-service-2"
-      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_1_HOST=elastic-query-service-2"
-      - "ELASTIC_QUERY_WEB_CLIENT_WEB_CLIENT_INSTANCES_1_PORT=8186"
       - "ENCRYPT_KEY=${ENCRYPT_KEY}"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SECURITY_LOGOUT_SUCCESS_URL=http://elastic-query-web-client:8184/elastic-query-web-client"
@@ -219,6 +246,8 @@ services:
     depends_on:
       - config-server
       - keycloak-authorization-server
+      - discovery-service-1
+      - discovery-service-2
       - kafka-broker-1
       - kafka-broker-2
       - kafka-broker-3
@@ -232,6 +261,7 @@ services:
       - "CONFIG_SERVER_URL=http://config-server:8888"
       - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "EUREKA_SERVICE_URL=http://discovery-service-1:8761/eureka/,http://discovery-service-2:8762/eureka/"
 
       - "SERVER_PORT=8187"
       - "SERVER_SERVLET_CONTEXT_PATH=/kafka-streams-service"
@@ -262,6 +292,8 @@ services:
     depends_on:
       - config-server
       - keycloak-authorization-server
+      - discovery-service-1
+      - discovery-service-2
       - postgres
       - kafka-broker-1
       - kafka-broker-2
@@ -280,6 +312,7 @@ services:
       - "CONFIG_SERVER_URL=http://config-server:8888"
       - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
       - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+      - "EUREKA_SERVICE_URL=http://discovery-service-1:8761/eureka/,http://discovery-service-2:8762/eureka/"
 
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
