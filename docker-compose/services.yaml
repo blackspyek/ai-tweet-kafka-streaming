@@ -122,6 +122,8 @@ services:
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/token"
       - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service:8187/kafka-streams-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_ANALYTICS_DATABASE_URI=http://analytics-service:8188/analytics-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_WEBCLIENT_QUERY_TYPE=ANALYTICS_DATABASE"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET=${ELASTIC_QUERY_SERVICE_CLIENT_SECRET}"
     networks:
@@ -159,6 +161,8 @@ services:
       - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/token"
       - "ELASTIC_QUERY_SERVICE_QUERY_FROM_KAFKA_STATE_STORE_URI=http://kafka-streams-service:8187/kafka-streams-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_QUERY_FROM_ANALYTICS_DATABASE_URI=http://analytics-service:8188/analytics-service/get-word-count-by-word/{word}"
+      - "ELASTIC_QUERY_SERVICE_WEBCLIENT_QUERY_TYPE=ANALYTICS_DATABASE"
       - "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
       - "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET=${ELASTIC_QUERY_SERVICE_CLIENT_SECRET}"
     networks:
@@ -244,3 +248,54 @@ services:
 
     networks:
       - ${GLOBAL_NETWORK:-services}
+  analytics-service:
+    image: analytics-service:${SERVICE_VERSION:-latest}
+    ports:
+      - "5013:5013"
+      - "8188:8188"
+
+    volumes:
+      - "./docker-logs:/workspace/analytics-service/logs"
+
+    restart: "on-failure:10"
+
+    depends_on:
+      - config-server
+      - keycloak-authorization-server
+      - postgres
+      - kafka-broker-1
+      - kafka-broker-2
+      - kafka-broker-3
+      - schema-registry
+
+    environment:
+      - "JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013 -Xms128m -Xmx256m"
+
+      - "LOGGING_LEVEL_COM_MICROSERVICES_DEMO=debug"
+      - "LOGGING_LEVEL_ROOT=info"
+
+      - "SERVER_PORT=8188"
+      - "SERVER_SERVLET_CONTEXT_PATH=/analytics-service"
+
+      - "CONFIG_SERVER_URL=http://config-server:8888"
+      - "SPRING_CLOUD_CONFIG_USERNAME=spring_cloud_user"
+      - "SPRING_CLOUD_CONFIG_PASSWORD=test"
+
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-authorization-server:9091/realms/microservices-realm"
+      - "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak-authorization-server:9091/realms/microservices-realm/protocol/openid-connect/certs"
+
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres?currentSchema=analytics&binaryTransfer=true&reWriteBatchedInserts=true"
+      - "SPRING_DATASOURCE_USERNAME=keycloak"
+      - "SPRING_DATASOURCE_PASSWORD=keycloak"
+
+      - "SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect"
+      - "SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect"
+
+      - "KAFKA_CONFIG_BOOTSTRAP_SERVERS=kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
+      - "KAFKA_CONFIG_SCHEMA_REGISTRY_URL=http://schema-registry:8081"
+      - "KAFKA_CONFIG_TOPIC_NAME=twitter-analytics-topic"
+
+      - "ENCRYPT_KEY=${ENCRYPT_KEY}"
+
+    networks:
+      - ${GLOBAL_NETWORK:-application}

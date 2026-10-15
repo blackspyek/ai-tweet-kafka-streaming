@@ -54,8 +54,15 @@ public class TwitterElasticQueryService implements ElasticQueryService {
     private Long getWordCount(String text, String accessToken) {
         if (QueryType.KAFKA_STATE_STORE.getType().equals(elasticQueryServiceConfigData.getWebClient().getQueryType())){
             return getWordCountFromKafkaStateStore(text, accessToken).getWordCount();
+        } else if (QueryType.ANALYTICS_DATABASE.getType().equals(elasticQueryServiceConfigData.getWebClient().getQueryType())){
+            return getFromAnalyticsDatabase(text, accessToken).getWordCount();
         }
         return 0L;
+    }
+
+    private ElasticQueryServiceWordCountResponseModel getFromAnalyticsDatabase(String text, String accessToken) {
+        ElasticQueryServiceConfigData.Query queryFromAnalyticsDatabase = elasticQueryServiceConfigData.getQueryFromAnalyticsDatabase();
+        return retrieveResponseModel(text, accessToken, queryFromAnalyticsDatabase);
     }
 
     private ElasticQueryServiceWordCountResponseModel getWordCountFromKafkaStateStore(String text, String accessToken) {
@@ -66,17 +73,17 @@ public class TwitterElasticQueryService implements ElasticQueryService {
     private ElasticQueryServiceWordCountResponseModel retrieveResponseModel(
             String text,
             String accessToken,
-            ElasticQueryServiceConfigData.Query queryFromKafkaStateStore
+            ElasticQueryServiceConfigData.Query query
     ) {
         return webClientBuilder
                 .build()
-                .method(HttpMethod.valueOf(queryFromKafkaStateStore.getMethod()))
+                .method(HttpMethod.valueOf(query.getMethod()))
                 .uri(
-                        queryFromKafkaStateStore.getUri(),
+                        query.getUri(),
                         uriBuilder -> uriBuilder.build(text)
                 )
                 .headers(headers -> headers.setBearerAuth(accessToken))
-                .accept(MediaType.valueOf(queryFromKafkaStateStore.getAccept()))
+                .accept(MediaType.valueOf(query.getAccept()))
                 .retrieve()
                 .onStatus(
                         status -> status.value() == HttpStatus.UNAUTHORIZED.value(),
